@@ -251,11 +251,60 @@
     color:var(--muted-2);
     font-size:13px;
   }
-  .name{
-    font-family:'Lora',serif;
-    font-weight:600;
-    font-size:16px;
-  }
+.name-cell{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.name{
+  font-family:'Lora',serif;
+  font-weight:600;
+  font-size:16px;
+}
+.note-btn{
+  width:22px;height:22px;
+  border-radius:50%;
+  border:1px solid var(--paper-line);
+  background:var(--paper);
+  color:var(--muted-2);
+  font-size:11px;
+  line-height:1;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  transition:all .15s;
+}
+.note-btn:hover{border-color:var(--main-accent);color:var(--main-accent);}
+.note-btn.open{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+.note-btn.has-note:not(.open){background:var(--assist-accent-soft);border-color:var(--assist-accent);color:var(--assist-accent);}
+.note-row{
+  padding:0 20px 18px;
+  border-bottom:1px solid var(--paper-line);
+  background:var(--paper);
+}
+.note-row textarea{
+  width:100%;
+  min-height:56px;
+  resize:vertical;
+  font-family:'Inter',sans-serif;
+  font-size:13.5px;
+  line-height:1.5;
+  padding:10px 12px;
+  border:1px solid var(--paper-line);
+  border-radius:7px;
+  background:var(--white);
+  color:var(--ink);
+}
+.note-row textarea:focus{outline:2px solid var(--main-accent);outline-offset:1px;}
+.note-row .note-label{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted-2);
+  display:block;
+  padding:12px 0 6px;
+}
   .toggle{
     display:flex;
     gap:6px;
@@ -440,6 +489,8 @@ const storageAdapter = {
 let appData = null;
 let selectedDate = null;
 let loaded = false;
+const expandedNotes = new Set();
+let noteSaveTimers = {};
 
 function pad(n){ return n.toString().padStart(2,'0'); }
 function toISO(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
@@ -645,10 +696,15 @@ function render(){
 
     const pct = rate === null ? '—' : Math.round(rate * 100) + '%';
     const barWidth = rate === null ? 0 : Math.round(rate * 100);
+    const notes = teacher.notes || '';
+    const isOpen = expandedNotes.has(teacher.id);
 
     row.innerHTML = `
       <span class="roll">${pad(idx+1)}</span>
-      <span class="name">${escapeHtml(teacher.name)}</span>
+      <span class="name-cell">
+        <span class="name">${escapeHtml(teacher.name)}</span>
+        <button class="note-btn ${isOpen ? 'open' : ''} ${notes.trim() ? 'has-note' : ''}" title="Notes">✎</button>
+      </span>
       <span class="toggle">
         <button class="present ${status==='present' ? 'active':''}" data-action="present">Present</button>
         <button class="absent ${status==='absent' ? 'active':''}" data-action="absent">Absent</button>
@@ -665,11 +721,42 @@ function render(){
     row.querySelector('[data-action="present"]').addEventListener('click', () => markAttendance(teacher.id, 'present'));
     row.querySelector('[data-action="absent"]').addEventListener('click', () => markAttendance(teacher.id, 'absent'));
     row.querySelector('.remove').addEventListener('click', () => removeTeacher(teacher.id));
+    row.querySelector('.note-btn').addEventListener('click', () => toggleNote(teacher.id));
 
     rowsEl.appendChild(row);
+
+    if(isOpen){
+      const noteRow = document.createElement('div');
+      noteRow.className = 'note-row';
+      noteRow.innerHTML = `
+        <span class="note-label">Note — ${escapeHtml(teacher.name)}</span>
+        <textarea placeholder="Add a note about this teacher…">${escapeHtml(notes)}</textarea>
+      `;
+      const textarea = noteRow.querySelector('textarea');
+      textarea.addEventListener('input', () => scheduleNoteSave(teacher.id, textarea.value));
+      rowsEl.appendChild(noteRow);
+    }
   });
 }
 
+function toggleNote(id){
+  if(expandedNotes.has(id)){
+    expandedNotes.delete(id);
+  } else {
+    expandedNotes.add(id);
+  }
+  render();
+}
+
+function scheduleNoteSave(id, value){
+  clearTimeout(noteSaveTimers[id]);
+  noteSaveTimers[id] = setTimeout(() => {
+    const teacher = currentRoster().find(t => t.id === id);
+    if(!teacher) return;
+    teacher.notes = value;
+    saveApp();
+  }, 400);
+}
 function markAttendance(id, status){
   const teacher = currentRoster().find(t => t.id === id);
   if(!teacher) return;
@@ -693,7 +780,7 @@ function addTeacher(){
   const input = document.getElementById('newTeacherName');
   const name = input.value.trim();
   if(!name) return;
-  currentRoster().push({ id: uid('t'), name, records:{} });
+  currentRoster().push({ id: uid('t'), name, records:{}, notes: '' });
   input.value = '';
   saveApp();
   render();
