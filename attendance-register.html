@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Attendance Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F5F0;
+    --paper-line:#DBD9CE;
+    --ink:#1C231E;
+    --muted:#767E73;
+    --muted-2:#9AA096;
+    --main-accent:#2E6B52;
+    --main-accent-soft:#E4EFE8;
+    --assist-accent:#A9761F;
+    --assist-accent-soft:#F3EADA;
+    --danger:#B3492F;
+    --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:48px 20px 80px;
+  }
+  .wrap{max-width:880px;margin:0 auto;}
+
+  /* header */
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:0 0 10px;
+  }
+  h1{
+    font-family:'Lora',serif;
+    font-weight:600;
+    font-size:38px;
+    margin:0 0 6px;
+    letter-spacing:-.01em;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:14.5px;
+    margin:0 0 34px;
+  }
+
+  /* date bar */
+  .datebar{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-radius:10px;
+    padding:14px 18px;
+    margin-bottom:28px;
+  }
+  .datebar .navbtn{
+    width:30px;height:30px;
+    border-radius:50%;
+    border:1px solid var(--paper-line);
+    background:var(--paper);
+    color:var(--ink);
+    font-size:15px;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s;
+  }
+  .datebar .navbtn:hover{background:var(--main-accent-soft);}
+  .date-display{
+    flex:1;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+  }
+  .date-display .day-name{
+    color:var(--muted);
+    margin-right:8px;
+  }
+  input[type=date]{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    border:1px solid var(--paper-line);
+    border-radius:6px;
+    padding:6px 8px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .sunday-note{
+    font-size:12.5px;
+    color:var(--danger);
+    font-family:'IBM Plex Mono',monospace;
+  }
+
+  /* add teacher */
+  .add-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:34px;
+  }
+  .add-row input[type=text]{
+    flex:1;
+    font-family:'Inter',sans-serif;
+    font-size:14.5px;
+    padding:12px 14px;
+    border:1px solid var(--paper-line);
+    border-radius:8px;
+    background:var(--white);
+    color:var(--ink);
+  }
+  .add-row input[type=text]:focus{outline:2px solid var(--main-accent);outline-offset:1px;}
+  .add-row button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    padding:12px 20px;
+    border-radius:8px;
+    border:none;
+    background:var(--ink);
+    color:var(--paper);
+    cursor:pointer;
+    transition:opacity .15s;
+  }
+  .add-row button:hover{opacity:.85;}
+
+  /* register */
+  .register{
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .reg-head{
+    display:grid;
+    grid-template-columns:48px 1fr 190px 150px 170px 32px;
+    gap:12px;
+    padding:12px 20px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--muted-2);
+    border-bottom:1px solid var(--paper-line);
+  }
+  .row{
+    display:grid;
+    grid-template-columns:48px 1fr 190px 150px 170px 32px;
+    gap:12px;
+    align-items:center;
+    padding:16px 20px;
+    border-bottom:1px solid var(--paper-line);
+  }
+  .row:last-child{border-bottom:none;}
+  .roll{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--muted-2);
+    font-size:13px;
+  }
+  .name{
+    font-family:'Lora',serif;
+    font-weight:600;
+    font-size:16px;
+  }
+  .toggle{
+    display:flex;
+    gap:6px;
+  }
+  .toggle button{
+    font-family:'Inter',sans-serif;
+    font-size:12px;
+    font-weight:600;
+    padding:6px 12px;
+    border-radius:6px;
+    border:1px solid var(--paper-line);
+    background:var(--paper);
+    color:var(--muted);
+    cursor:pointer;
+    transition:all .15s;
+  }
+  .toggle button.present.active{
+    background:var(--main-accent);
+    border-color:var(--main-accent);
+    color:var(--white);
+  }
+  .toggle button.absent.active{
+    background:var(--danger);
+    border-color:var(--danger);
+    color:var(--white);
+  }
+  .toggle button:hover:not(.active){background:var(--paper-line);}
+
+  .rate-block{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .rate-frac{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+    font-variant-numeric:tabular-nums;
+  }
+  .rate-frac .slash{color:var(--muted-2);margin:0 2px;}
+  .rate-pct{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--muted);
+  }
+  .bar{
+    width:100%;
+    height:4px;
+    background:var(--paper-line);
+    border-radius:2px;
+    margin-top:2px;
+    overflow:hidden;
+  }
+  .bar-fill{height:100%;border-radius:2px;}
+
+  .badge{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    font-weight:500;
+    letter-spacing:.02em;
+    padding:6px 10px;
+    border-radius:5px;
+    text-align:center;
+    white-space:nowrap;
+  }
+  .badge.main{background:var(--main-accent-soft);color:var(--main-accent);}
+  .badge.assist{background:var(--assist-accent-soft);color:var(--assist-accent);}
+  .badge.new{background:var(--paper);color:var(--muted-2);border:1px dashed var(--paper-line);}
+
+  .remove{
+    background:none;
+    border:none;
+    color:var(--muted-2);
+    font-size:16px;
+    cursor:pointer;
+    line-height:1;
+    padding:4px;
+  }
+  .remove:hover{color:var(--danger);}
+
+  .empty{
+    padding:50px 20px;
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+  }
+  .empty span{display:block;font-family:'Lora',serif;font-size:18px;color:var(--ink);margin-bottom:6px;}
+
+  .footer-note{
+    margin-top:22px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    color:var(--muted-2);
+    text-align:center;
+  }
+
+  /* mobile */
+  @media (max-width:700px){
+    .reg-head{display:none;}
+    .row{
+      grid-template-columns:1fr;
+      gap:10px;
+      position:relative;
+      padding:18px 20px;
+    }
+    .roll{position:absolute;top:18px;right:20px;}
+    .remove{position:absolute;top:16px;right:20px;}
+    .row.has-remove .roll{right:44px;}
+    .toggle{order:3;}
+    .rate-block{order:4;}
+    .badge{order:5;width:fit-content;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Teacher Attendance Register</p>
+  <h1>Attendance</h1>
+  <p class="sub">Track daily presence. Rate = sessions present ÷ sessions since program start. Above 75% earns Main Teacher status.</p>
+
+  <div class="datebar">
+    <button class="navbtn" id="prevDay" title="Previous session">‹</button>
+    <div class="date-display" id="dateDisplay">Loading…</div>
+    <input type="date" id="datePicker" />
+    <button class="navbtn" id="nextDay" title="Next session">›</button>
+  </div>
+  <p class="sunday-note" id="sundayNote" style="display:none;">No sessions are held on Sundays — pick another date.</p>
+
+  <div class="add-row">
+    <input type="text" id="newTeacherName" placeholder="Add a teacher by name…" maxlength="60" />
+    <button id="addTeacherBtn">Add teacher</button>
+  </div>
+
+  <div class="register">
+    <div class="reg-head">
+      <span>Roll</span>
+      <span>Name</span>
+      <span>Today's session</span>
+      <span>Rate</span>
+      <span>Status</span>
+      <span></span>
+    </div>
+    <div id="rows"></div>
+    <div class="empty" id="emptyState" style="display:none;">
+      <span>No teachers yet</span>
+      Add your first teacher above to start the register.
+    </div>
+  </div>
+
+  <p class="footer-note" id="loadingNote">Loading register…</p>
+</div>
+
+<script>
+const STORAGE_KEY = 'roster-v1';
+let roster = []; // [{id, name, records:{ 'YYYY-MM-DD': 'present'|'absent' }}]
+let selectedDate = null;
+let loaded = false;
+
+function pad(n){ return n.toString().padStart(2,'0'); }
+function toISO(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function fromISO(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function isSunday(d){ return d.getDay() === 0; }
+
+function nearestNonSunday(d){
+  const copy = new Date(d);
+  if(isSunday(copy)) copy.setDate(copy.getDate() - 1); // fall back to Saturday
+  return copy;
+}
+
+async function loadRoster(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, false);
+    roster = res && res.value ? JSON.parse(res.value) : [];
+  }catch(e){
+    roster = [];
+  }
+  loaded = true;
+  document.getElementById('loadingNote').style.display = 'none';
+  render();
+}
+
+async function saveRoster(){
+  try{
+    await window.storage.set(STORAGE_KEY, JSON.stringify(roster), false);
+  }catch(e){
+    console.error('Could not save register', e);
+  }
+}
+
+function computeStats(teacher){
+  const dates = Object.keys(teacher.records);
+  const total = dates.length;
+  const present = dates.filter(d => teacher.records[d] === 'present').length;
+  const rate = total === 0 ? null : present / total;
+  return { total, present, rate };
+}
+
+function setSelectedDate(d){
+  d = nearestNonSunday(d);
+  selectedDate = d;
+  document.getElementById('datePicker').value = toISO(d);
+  const dayName = d.toLocaleDateString(undefined, { weekday:'long' });
+  const full = d.toLocaleDateString(undefined, { month:'long', day:'numeric', year:'numeric' });
+  document.getElementById('dateDisplay').innerHTML = `<span class="day-name">${dayName}</span>${full}`;
+  document.getElementById('sundayNote').style.display = 'none';
+  render();
+}
+
+function render(){
+  if(!loaded) return;
+  const rowsEl = document.getElementById('rows');
+  const emptyEl = document.getElementById('emptyState');
+  rowsEl.innerHTML = '';
+
+  if(roster.length === 0){
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  const iso = toISO(selectedDate);
+
+  roster.forEach((teacher, idx) => {
+    const { total, present, rate } = computeStats(teacher);
+    const status = teacher.records[iso];
+
+    const row = document.createElement('div');
+    row.className = 'row has-remove';
+
+    let badgeHtml, barColor;
+    if(rate === null){
+      badgeHtml = `<span class="badge new">Not yet rated</span>`;
+      barColor = 'var(--paper-line)';
+    } else if(rate > 0.75){
+      badgeHtml = `<span class="badge main">Main Teacher</span>`;
+      barColor = 'var(--main-accent)';
+    } else {
+      badgeHtml = `<span class="badge assist">Teacher Assistant</span>`;
+      barColor = 'var(--assist-accent)';
+    }
+
+    const pct = rate === null ? '—' : Math.round(rate * 100) + '%';
+    const barWidth = rate === null ? 0 : Math.round(rate * 100);
+
+    row.innerHTML = `
+      <span class="roll">${pad(idx+1)}</span>
+      <span class="name">${escapeHtml(teacher.name)}</span>
+      <span class="toggle">
+        <button class="present ${status==='present' ? 'active':''}" data-action="present">Present</button>
+        <button class="absent ${status==='absent' ? 'active':''}" data-action="absent">Absent</button>
+      </span>
+      <span class="rate-block">
+        <span class="rate-frac">${present}<span class="slash">/</span>${total}</span>
+        <span class="rate-pct">${pct}</span>
+        <span class="bar"><span class="bar-fill" style="width:${barWidth}%; background:${barColor};"></span></span>
+      </span>
+      ${badgeHtml}
+      <button class="remove" title="Remove teacher">×</button>
+    `;
+
+    row.querySelector('[data-action="present"]').addEventListener('click', () => markAttendance(teacher.id, 'present'));
+    row.querySelector('[data-action="absent"]').addEventListener('click', () => markAttendance(teacher.id, 'absent'));
+    row.querySelector('.remove').addEventListener('click', () => removeTeacher(teacher.id));
+
+    rowsEl.appendChild(row);
+  });
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function markAttendance(id, status){
+  const teacher = roster.find(t => t.id === id);
+  if(!teacher) return;
+  const iso = toISO(selectedDate);
+  if(teacher.records[iso] === status){
+    delete teacher.records[iso]; // click again to unmark
+  } else {
+    teacher.records[iso] = status;
+  }
+  saveRoster();
+  render();
+}
+
+function removeTeacher(id){
+  roster = roster.filter(t => t.id !== id);
+  saveRoster();
+  render();
+}
+
+function addTeacher(){
+  const input = document.getElementById('newTeacherName');
+  const name = input.value.trim();
+  if(!name) return;
+  roster.push({ id: 't_' + Date.now() + '_' + Math.random().toString(36).slice(2,7), name, records:{} });
+  input.value = '';
+  saveRoster();
+  render();
+}
+
+document.getElementById('addTeacherBtn').addEventListener('click', addTeacher);
+document.getElementById('newTeacherName').addEventListener('keydown', e => { if(e.key === 'Enter') addTeacher(); });
+
+document.getElementById('datePicker').addEventListener('change', e => {
+  const d = fromISO(e.target.value);
+  if(isSunday(d)){
+    document.getElementById('sundayNote').style.display = 'block';
+    e.target.value = toISO(selectedDate);
+    return;
+  }
+  setSelectedDate(d);
+});
+
+document.getElementById('prevDay').addEventListener('click', () => {
+  const d = new Date(selectedDate);
+  d.setDate(d.getDate() - 1);
+  if(isSunday(d)) d.setDate(d.getDate() - 1);
+  setSelectedDate(d);
+});
+document.getElementById('nextDay').addEventListener('click', () => {
+  const d = new Date(selectedDate);
+  d.setDate(d.getDate() + 1);
+  if(isSunday(d)) d.setDate(d.getDate() + 1);
+  setSelectedDate(d);
+});
+
+setSelectedDate(new Date());
+loadRoster();
+</script>
+</body>
+</html>
